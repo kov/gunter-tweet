@@ -46,8 +46,10 @@ api = get_api()
 mentions = api.mentions_timeline(since_id=get_last_seen())
 if mentions:
     for mention in reversed(mentions):
-        api.update_status(generate_reply(mention))
-
+        try:
+            api.update_status(generate_reply(mention), in_reply_to_status_id=mention.id)
+        except tweepy.error.TweepError, e:
+            print e.message
     save_last_seen(mentions)
 elif should_wenk():
     api.update_status(generate_wenks())
