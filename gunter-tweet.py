@@ -25,7 +25,7 @@ def get_last_seen():
 
 
 def save_last_seen(mentions):
-    open(last_seen_path, 'w').write(str(mentions[-1].id))
+    open(last_seen_path, 'w').write(str(mentions[0].id))
 
 
 def generate_wenks():
