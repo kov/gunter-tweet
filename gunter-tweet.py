@@ -29,7 +29,7 @@ def save_last_seen(mentions):
 
 
 def generate_wenks():
-    return ' '.join(['Wenk'] * random.randrange(1, 4))
+    return ' '.join(['Wenk.'] * random.randrange(1, 4))
 
 
 def generate_reply(mention):
