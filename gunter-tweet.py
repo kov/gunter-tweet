@@ -180,8 +180,11 @@ if search_results:
         if what == SendReply and not too_many_replies():
             send_reply(result)
         elif what == Retweet:
-            result.retweet()
-            print 'Retweeted', result.text, 'by', result.user.screen_name
+            try:
+                result.retweet()
+                print 'Retweeted', result.text, 'by', result.user.screen_name
+            except tweepy.error.TweepError, e:
+                print 'Could not retweet:', result.text, 'by', result.user.screen_name, 'cause:', e.message
 
     save_last_seen_search(search_results)
 
