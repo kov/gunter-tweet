@@ -178,7 +178,11 @@ if mentions:
 
     save_last_seen(mentions)
 elif should_wenk():
-    api.update_status(generate_wenks())
+    wenks = generate_wenks()
+    for update in user_timeline:
+        if update.text == wenks:
+            wenks += ' Wenk.'
+    api.update_status(wenks)
 
 search_results = api.search('gunter', since_id=get_last_seen_search())
 if search_results:
