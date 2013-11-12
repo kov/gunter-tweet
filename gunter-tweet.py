@@ -69,12 +69,13 @@ def save_last_seen_search(results):
 
 
 def generate_wenks():
-    possible_sentences = [ 'Wenk.', 'Wenk, wenk.', 'Wenk, wenk, wenk.' ]
+    possible_sentences = [ 'Wenk.' ] * 6 + ['Wenk, wenk.'] * 3 + ['Wenk, wenk, wenk.' ]
+    print possible_sentences
     number_of_sentences = random.randrange(1, 4)
 
     sentences = []
     for i in range(number_of_sentences):
-        sentences.append(possible_sentences[random.randrange(0, 3)])
+        sentences.append(possible_sentences[random.randrange(0, len(possible_sentences))])
 
     return ' '.join(sentences)
 
