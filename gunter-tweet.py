@@ -70,7 +70,6 @@ def save_last_seen_search(results):
 
 def generate_wenks():
     possible_sentences = [ 'Wenk.' ] * 6 + ['Wenk, wenk.'] * 3 + ['Wenk, wenk, wenk.' ]
-    print possible_sentences
     number_of_sentences = random.randrange(1, 4)
 
     sentences = []
