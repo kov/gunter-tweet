@@ -153,7 +153,7 @@ def already_replied_to(status):
 
 
 def send_reply(status):
-    if already_replied_to(status):
+    if already_replied_to(status) or status.user.screen_name == 'GunterWenkWenk':
         return
 
     global replies_this_round
