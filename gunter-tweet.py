@@ -80,7 +80,12 @@ def generate_wenks():
 
 
 def generate_reply(status):
-    reply = '@' + status.user.screen_name + ' ' + generate_wenks()
+    reply = '@' + status.user.screen_name + ' '
+    mentioned_users = re.findall(r'@[^@\s]+', status.text)
+    mentioned_users.remove('@GunterWenkWenk')
+    if mentioned_users:
+        reply += ' '.join(mentioned_users) + ' '
+    reply += generate_wenks()
     for update in user_timeline:
         if update.text == reply:
             reply = ' Wenk.'
