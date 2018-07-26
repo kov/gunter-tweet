@@ -90,6 +90,10 @@ def generate_reply(status):
     for update in user_timeline:
         if update.text == reply:
             reply = ' Wenk.'
+
+    # Remove any leftover punctuation or spaces.
+    reply = reply.replace(',', '').replace(':', '').strip()
+
     return reply
 
 
