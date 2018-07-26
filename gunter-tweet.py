@@ -82,7 +82,8 @@ def generate_wenks():
 def generate_reply(status):
     reply = '@' + status.user.screen_name + ' '
     mentioned_users = re.findall(r'@[^@\s]+', status.text)
-    mentioned_users.remove('@GunterWenkWenk')
+    if '@GunterWenkWenk' in mentioned_users:
+        mentioned_users.remove('@GunterWenkWenk')
     if mentioned_users:
         reply += ' '.join(mentioned_users) + ' '
     reply += generate_wenks()
