@@ -130,7 +130,7 @@ def resolve_url(url):
 
 
 def resolve_urls(text):
-    urls = re.findall('http://t\.co/[0-9A-Za-z]{10}', text)
+    urls = re.findall('https?://t\.co/[0-9A-Za-z]{10}', text)
     if not urls:
         return text
 
