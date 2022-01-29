@@ -172,9 +172,10 @@ def send_reply(status):
     reply = generate_reply(status)
     try:
         api.update_status(reply, in_reply_to_status_id=status.id)
-        print 'Replied', reply, 'to', status.text, 'by', status.user.screen_name
+        #print 'Replied', reply, 'to', status.text, 'by', status.user.screen_name
     except tweepy.error.TweepError, e:
-        print status.text, '=>', reply, e.message
+        #print status.text, '=>', reply, e.message
+        pass
 
 
 api = get_api()
@@ -192,7 +193,12 @@ elif should_wenk():
     for update in user_timeline:
         if update.text == wenks:
             wenks += ' Wenk.'
-    api.update_status(wenks)
+    try:
+        api.update_status(wenks)
+    except tweepy.error.TweepError, e:
+        if not 'is a duplicate' in e.message:
+            print e.message
+
 
 search_results = api.search('gunter', since_id=get_last_seen_search())
 if search_results:
