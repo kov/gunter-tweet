@@ -14,6 +14,7 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 use lambda_runtime::{handler_fn, Context, Error};
 use rand::{Rng, distributions::Distribution};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use storage::{AwsSsmStorage, FileStorage, GunterStorage};
 
@@ -29,6 +30,8 @@ const POSSIBLE_SENTENCES: &[(&str, u32)] = &[
 struct Gunter {
     token: egg_mode::Token,
     storage: Box<dyn GunterStorage>,
+    gunter_regex: regex::Regex,
+    advtime_regex: regex::Regex,
 }
 
 impl Gunter {
@@ -40,10 +43,34 @@ impl Gunter {
             access: access_token,
         };
 
+        let gunter_regex = Regex::new(
+            r"\b(gunter|#gunter)\b"
+        ).expect("Failed to compile regex");
+
+        let advtime_regex = Regex::new(
+            r"\b(ice king|adventure time|adventuretime|#adventuretime|#adventuretimeweek)\b"
+        ).expect("Failed to compile regex");
+
         Gunter {
             token,
             storage,
+            gunter_regex,
+            advtime_regex,
         }
+    }
+
+    fn should_reply(&self, tweet: &egg_mode::tweet::Tweet) -> bool {
+        let text = tweet.text.to_lowercase();
+
+        if !self.gunter_regex.is_match(&text) {
+            return false;
+        }
+
+        if !self.advtime_regex.is_match(&text) {
+            return false;
+        }
+
+        true
     }
 
     fn should_wenk(&self) -> bool {
@@ -83,6 +110,7 @@ impl Gunter {
     }
 
     async fn run(&self) {
+        // Begin by replying to any mentions.
         let mentions = egg_mode::tweet::mentions_timeline(&self.token);
 
         let mentions = mentions.call(
@@ -105,6 +133,34 @@ impl Gunter {
             }
 
             return;
+        }
+
+        // Then, see if we can find any interesting tweets to reply to.
+        let search = egg_mode::search::search("gunter")
+            .result_type(egg_mode::search::ResultType::Recent)
+            .since_tweet(self.storage.last_search().await)
+            .call(&self.token)
+            .await
+            .unwrap();
+
+        if !search.statuses.is_empty() {
+            self.storage.save_last_search(search.statuses[0].id).await;
+
+            let mut number_of_replies = 0;
+            for tweet in search.statuses.iter().rev() {
+                if !self.should_reply(tweet) {
+                    continue;
+                }
+
+                self.reply_to(tweet).await;
+
+                number_of_replies += 1;
+
+                // Keep the number of replies civil.
+                if number_of_replies > 2 {
+                    break;
+                }
+            }
         }
 
         // We don't want to wenk every run, it gets too noisy.
