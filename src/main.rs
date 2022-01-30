@@ -34,6 +34,11 @@ struct Gunter {
     advtime_regex: regex::Regex,
 }
 
+enum WhatToDo {
+    Retweet,
+    Reply,
+}
+
 impl Gunter {
     fn new(storage: Box<dyn GunterStorage>) -> Self {
         let consumer_token = egg_mode::KeyPair::new(config::CONSUMER_KEY, config::CONSUMER_SECRET);
@@ -59,7 +64,7 @@ impl Gunter {
         }
     }
 
-    fn should_reply(&self, tweet: &egg_mode::tweet::Tweet) -> bool {
+    fn is_relevant(&self, tweet: &egg_mode::tweet::Tweet) -> bool {
         let text = tweet.text.to_lowercase();
 
         if !self.gunter_regex.is_match(&text) {
@@ -71,6 +76,22 @@ impl Gunter {
         }
 
         true
+    }
+
+    fn what_to_do_with(&self, tweet: &egg_mode::tweet::Tweet) -> WhatToDo {
+        // If it's a reply to us we want to just reply whatever the contents.
+        if let Some(screen_name) = &tweet.in_reply_to_screen_name {
+            if screen_name == "GunterWenkWenk" {
+                return WhatToDo::Reply;
+            }
+        }
+
+        // The tweet has some media, so let's retweet!
+        if let Some(_) = tweet.extended_entities {
+            WhatToDo::Retweet
+        } else {
+            WhatToDo::Reply
+        }
     }
 
     fn should_wenk(&self) -> bool {
@@ -146,18 +167,24 @@ impl Gunter {
         if !search.statuses.is_empty() {
             self.storage.save_last_search(search.statuses[0].id).await;
 
-            let mut number_of_replies = 0;
+            let mut number_of_actions = 0;
             for tweet in search.statuses.iter().rev() {
-                if !self.should_reply(tweet) {
+                if !self.is_relevant(tweet) {
                     continue;
                 }
 
-                self.reply_to(tweet).await;
-
-                number_of_replies += 1;
+                match self.what_to_do_with(tweet) {
+                    WhatToDo::Reply => self.reply_to(tweet).await,
+                    WhatToDo::Retweet => {
+                        egg_mode::tweet::retweet(tweet.id, &self.token)
+                            .await
+                            .expect("Failed to retweet");
+                    },
+                }
 
                 // Keep the number of replies civil.
-                if number_of_replies > 2 {
+                number_of_actions += 1;
+                if number_of_actions > 2 {
                     break;
                 }
             }
